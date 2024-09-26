@@ -10,11 +10,11 @@ import postsAtom from "../atoms/postsAtom";
 import CreatePost from "../components/CreatePost";
 
 const UserPage = () => {
-  const { user, loading } = useGetUserProfile();
+  const { user, loading: userLoading } = useGetUserProfile();
   const { username } = useParams();
   const showToast = useShowToast();
   const [posts, setPosts] = useRecoilState(postsAtom);
-  const [fetchingPosts, setFetchingPosts] = useState(true);
+  const [fetchingPosts, setFetchingPosts] = useState(false); // Start with false
 
   useEffect(() => {
     const getPosts = async () => {
@@ -23,11 +23,10 @@ const UserPage = () => {
       try {
         const res = await fetch(`/api/posts/user/${username}`);
         const data = await res.json();
-        console.log(data);
         setPosts(data);
       } catch (error) {
         showToast("Error", error.message, "error");
-        setPosts([]);
+        setPosts([]); // Handle empty state
       } finally {
         setFetchingPosts(false);
       }
@@ -36,7 +35,7 @@ const UserPage = () => {
     getPosts();
   }, [username, showToast, setPosts, user]);
 
-  if (!user && loading) {
+  if (userLoading) {
     return (
       <Flex justifyContent={"center"}>
         <Spinner size={"xl"} />
@@ -44,7 +43,7 @@ const UserPage = () => {
     );
   }
 
-  if (!user && !loading) return <h1>User not found</h1>;
+  if (!user) return <h1>User not found</h1>;
 
   return (
     <>
@@ -54,7 +53,7 @@ const UserPage = () => {
         <CreatePost />
       </div>
 
-      {!fetchingPosts && posts.length === 0 && <h1>User has not posts.</h1>}
+      {!fetchingPosts && posts.length === 0 && <h1>User has no posts.</h1>}
       {fetchingPosts && (
         <Flex justifyContent={"center"} my={12}>
           <Spinner size={"xl"} />
